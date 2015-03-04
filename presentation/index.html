@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+
+    <title>Transactions with Bitcore v0.9</title>
+
+    <meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+    <meta name="author" content="Hakim El Hattab">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/bitpay.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="reveal">
+
+      <!-- Any section element inside of this container is displayed as a slide -->
+      <div class="slides">
+        <section>
+          <center><img src="http://bitcore.io/css/images/lava-ball.png" style="margin:0;background:none;border:0;box-shadow:none;" /></center>
+          <h1>Bitcore</h1>
+          <center><h2 style="max-width: 90%;">Open-source Javascript Library for easily building powerful blockchain-backed apps.</h2></center>
+          <br>
+          <h2><code>bitcore.io</code></h2>
+          <h5>trustless by design.</h5>
+          <br>
+          <p>
+            <small><a href="https://github.com/martindale">@martindale</a> &bull; Blockchain University &bull; February 21st, 2015</small>
+          </p>
+        </section>
+        
+        <section>
+          <h2>Some Basics</h2>
+          <section>
+            <ul>
+              <li>JavaScript, for the most accessibility.</li>
+              <li>Isomorphic; runs on both the server and the client, with the same code.</li>
+              <li>97% test coverage</li>
+              <li>Passes all of Bitcoin Core's Tests</li>
+            </ul>
+          </section>
+        </section>
+        
+        <section>
+          <h2>UTXOs</h2>
+
+          <section>
+            <h3>Where do you find unspent outputs?</h3>
+
+            <ul>
+              <li>Bitcoin Core: "listunspent" (json-rpc console)</li>
+              <li>Bitcoin Core: "dumpprivkey &lt;address_from_unspent&gt;" (json-rpc console)</li>
+              <li>Insight API: "/api/addr/&lt;btc_address&gt;/utxo"</li>
+            </ul>
+            </p>
+          </section>
+
+        </section>
+
+        <section>
+          <h2>Playground</h2>
+          <h3><code>bitcore.io/playground</code></h3>
+        </section>
+
+        <section>
+
+          <section>
+            <h2>Constructing</h2>
+            <pre><code>
+var bitcore       = require('bitcore');
+var Transaction   = bitcore.Transaction;
+var Address       = bitcore.Address;
+var PrivateKey    = bitcore.PrivateKey;
+var UnspentOutput = bitcore.Transaction.UnspentOutput;
+
+var change      = new Address('mursDVxqNQmmwWHACpM9VHwVVSfTddGsEM');
+var privateKey1 = PrivateKey.fromWIF('cW1wwrvnJB3V2qe9HE6aW85vkGhuVX9JSaDLQ6k6uRuhMFhdi3jC');
+
+var unspent1 = UnspentOutput({
+  "txid" : "0516af39393b4173e8e2e6732c2d5dc22aa4c55c1258d20a2e07836e26f4e8de",
+  "vout" : 0,
+  "address" : "mqM8h7jDiuTiqgeDDkibNHmKxCmbqAF7Gy",
+  "scriptPubKey" : "76a9146bd5c7192e244326a6ddc41268227a805c0cb35288ac",
+  "amount" : 0.00240000
+});
+
+var destination = new Address('mnCXgzs3x4dfMMGacuPRCLmVci1x93C42u');
+
+var transaction = Transaction();
+transaction
+  .from(unspent1)
+  .to(destination, 230000)
+  .fee(10000)
+  .change(change)
+  .sign(privateKey1);
+
+            </code></pre>
+          </section>
+          
+          <section>
+            <pre><code style="font-size: 2em; line-height: 1.5em;">
+var transaction = new Transaction();
+transaction
+  .from(unspent1)
+  .to(destination, 230000)
+  .fee(10000)
+  .change(change)
+  .sign(privateKey1);
+            </code></pre>
+          </section>
+
+          <section>
+            <h2>Broadcasting</h2>
+            
+            <pre><code>
+var serialized = transaction.serialize();
+console.log(serialized);
+
+/*
+0100000001dee8f4266e83072e0ad258125cc5a42ac25d2d2c73e6e2e873413b3939af
+1605000000006a473044022017ce08556eaab402c74bc9156c09a2981438e18b585afb
+cb245ffa8c84205c7202200df7200871add40f69d18cb41278a27957cf2a67346cfb84
+ed693385bc0871e701210226ab3b46f85bf32f63778c680e16ef8b3fcb51d638a7980d
+651bfaeae6c17752ffffffff0170820300000000001976a914494cdabd3ec1ba39bea8
+4e4f3628d9861ceada6a88ac00000000
+*/
+
+            </code></pre>
+Bitcoin Core: "sendrawtransaction" (json-rpc console)
+
+            <small>txid: <a href="https://test-insight.bitpay.com/tx/7d62d8ac87f1250f77d76c51b69fd193883b6a77f473c318a10e4e0c5bcd3d67">7d62d8ac87f1250f77d76c51b69fd193883b6a77f473c318a10e4e0c5bcd3d67</a></small>
+
+          </section>
+          
+        </section>
+
+        <section>
+
+          <h2>Transactions with Data</h2>
+          <p>Using the Bitcoin blockchain to validate other types of data in addition to recording amounts of bitcoin. For example, <a href="http://counterparty.io/">Counterparty</a> and <a href="http://www.proofofexistence.com/">Proof-of-Existence</a> add data to the blockchain to validate messages and documents.</p>
+        </section>
+
+        <section>
+          <section>
+          <h2>Miner Fee with Data</h2>
+
+          <pre><code>
+var unspent2 = UnspentOutput({
+  "txid" : "0fdf4e24ca0936f77effad80081396ccab293232bcd7eb76544960576e03150e",
+  "vout" : 0,
+  "address" : "mwsXqRzBdnP7vLKpGadwNSJPW6LcFCrX8S",
+  "scriptPubKey" : "76a914b36654943f895765d2769b3bd0d6fbdcbe0dfc2288ac",
+  "amount" : 0.00050000,
+  "confirmations" : 40037
+});
+
+var privateKey2 = PrivateKey.fromWIF('cRq6hUM6jsQ4j5t188cEC5jvjLGtZzgJ8UZgEz5933vbv2rA4gge');
+
+var transaction2 = Transaction();
+transaction2
+  .from(unspent2)
+  .fee(50000);
+
+// Uses OP_RETURN 
+transaction2.addData('hello, world');
+transaction2.sign(privateKey2);
+
+var serialized2 = transaction2.uncheckedSerialize();
+          </code></pre>
+
+<small>testnet3 txid: <a href="https://test-insight.bitpay.com/tx/4b163326f01992f60a2a30ba414807a99d5c233039c4cb95f07c71bf73a56146">4b163326f01992f60a2a30ba414807a99d5c233039c4cb95f07c71bf73a56146</a></small>
+
+        </section>
+        <section>
+        <pre><code>
+transaction2.toObject();
+
+// example output
+{
+  change: 'mursDVxqNQmmwWHACpM9VHwVVSfTddGsEM',
+  version: 1,
+  inputs: [{
+    prevTxId: '0fdf4e24ca0936f77effad80081396ccab293232bcd7eb76544960576e03150e',
+    outputIndex: 0,
+    sequenceNumber: 4294967295,
+    script: '71 0x3044022032a6ea3ed714193f6c33fc2c668ac88eaa0c476248d4f75ba4922dc2305d52b802206fadf1d89e02d0bb46b385aed83c2c9ce861d3d9968cc18b88e0490996dffe7801 33 0x03df265dcd353922cfd9245fc169d37bab4203873963c4c9748342d46d6e0e3c56',
+    output: [Object]
+  }],
+  outputs: [{
+    satoshis: 0,
+    script: 'OP_RETURN 12 0x68656c6c6f2c20776f726c64'
+  }],
+  nLockTime: 0
+}
+        </code></pre>
+        </section>
+
+        </section>
+        
+
+        <!-- Example of nested vertical slides -->
+        <section>
+          <section>
+            <h2>Multisig with Hashed Data</h2>
+            <pre><code>
+
+// spending key
+var privateKey6 = PrivateKey.fromWIF('cQhLwztVnteREBFR6ebVxNaNpD9HcpPvHmAhStjNvySGMJmQw1Fn');
+
+// receiving key
+var privateKey7 = PrivateKey.fromWIF('cUBEC9yJaARM9EAViVTpAyN2nx8a5D81Qvq3iTgGgqEn2Qwqxthk');
+var publicKey7 = privateKey7.toPublicKey();
+
+// receiving data -> key
+var data = 'hello world';
+var datahash = bitcore.crypto.Hash.sha256ripemd160(new Buffer(data)).toString('hex');
+var privateKey8 = new PrivateKey(datahash);
+var publicKey8 = privateKey8.toPublicKey();
+
+             </code></pre>
+          </section>
+
+          <section>
+            <pre><code>
+var transaction6 = Transaction();
+
+var unspent6 = UnspentOutput({
+  "txid" : "1256eddc7fcb279664dcb58853bc6172d0648ac8a07d91aa2e70db8ecc2c95e3",
+  "vout" : 1,
+  "address" : "n1QYBu3YpCkt7tH2BhWogwUVU3zgC2vS8J",
+  "scriptPubKey" : "76a914da2be5a960dd2fcfdfb71c7ed5f6822370e6b94588ac",
+  "amount" : 0.04160000
+});
+
+transaction6.from(unspent6);
+transaction6.fee(10000);
+
+transaction6.addOutput(new Output({
+  script: Script.buildMultisigOut([publicKey7, publicKey8], 1),
+  satoshis: 4150000
+}));
+
+transaction6.sign(privateKey6);
+
+var serialized6 = transaction6.serialize();
+            </code></pre>
+
+          <small>testnet3 txid: <a href="https://test-insight.bitpay.com/tx/098acedb2bc18a1f46410b0390b9e2726e3544fe49732c1235516a004df8e9ec">098acedb2bc18a1f46410b0390b9e2726e3544fe49732c1235516a004df8e9ec</a></small>
+
+
+          </section>
+
+          <section>
+          <pre><code>
+transaction6.toObject();
+
+// example output
+{
+  change: undefined,
+  version: 1,
+  inputs: [{
+    prevTxId: '1256eddc7fcb279664dcb58853bc6172d0648ac8a07d91aa2e70db8ecc2c95e3',
+    outputIndex: 1,
+    sequenceNumber: 4294967295,
+    script: '72 0x3045022100ff24a475942cbab8d43733398d774121357e766ee10fb9c28273fc32af68144802203c66ca1d045f3242124d1ce63243a61ebe6758b4655f34b416d1a5d3b2e81b0201 33 0x02987fe2a76691d90a0e9d06ba7a19827b7e44d6423b602b15978158ca6fa7ca74',
+    output: [Object]
+  }],
+  outputs: [{
+    satoshis: 4150000,
+    script: 'OP_1 33 0x02be0bda8e0d21486a755530bfcbb7301a9d74654952e8694ef59b6f8b45f87898 33 0x033049a2f9449362ff5b23da1490e1781582f96f2eb50b9113f47f58877a184314 OP_2 OP_CHECKMULTISIG'
+  }],
+  nLockTime: 0
+}
+          </code></pre>
+
+          </section>
+
+        </section>
+
+        <section>
+          <section>
+          <h2>Pay to Script with Hashed Data</h2>
+          <pre><code>
+// sending key
+var privateKey9 = PrivateKey.fromWIF('cQZpMgz5dskTBqm1vvXmkonoFAvRYux2EsPuMdBwxdnHjieAsgJE');
+
+// data to hash
+var data = [
+  'hello, world',
+  'this data is stored in the blockchain',
+  'by using it',
+  'to create several keys',
+  'which then receives bitcoin'
+];
+
+// generate receiving public keys
+var publicKeys = [];
+for( var i = 0; i < data.length; i++ ) {
+  var datahash = bitcore.crypto.Hash.sha256ripemd160(new Buffer(data)).toString('hex');
+  var key = new PrivateKey(datahash);
+  publicKeys.push(key.toPublicKey());
+}
+
+var destination9 = Address.createMultisig(publicKeys, 4); // 4 of 5 required signatures
+
+          </code></pre>
+          </section>
+          <section>
+          <pre><code>
+var unspent9 = UnspentOutput({
+  "txid" : "16ef3f74507cec3b8471bad92ba8167bc0a88cf845a4b933de62dcc83723bc37",
+  "vout" : 0,
+  "address" : "mh2oHZfapsGVKL1UksAZvoxbBAfQhP6ryu",
+  "scriptPubKey" : "76a914109d15b30d7ff173703946288f641d4535145c0e88ac",
+  "amount" : 0.00210000
+});
+
+var transaction9 = Transaction();
+
+transaction9
+  .from(unspent9)
+  .change(change)
+  .fee(10000)
+  .to(destination9, 180000)
+  .sign(privateKey9);
+
+
+          </code></pre>
+
+<small>testnet3 txid: <a href="https://test-insight.bitpay.com/tx/3faf98e8017c77ee011ea176af3e3afc12839bc9645962e132ccad22259bcfe1">3faf98e8017c77ee011ea176af3e3afc12839bc9645962e132ccad22259bcfe1</a></small>
+          </section>
+
+          <section>
+          <pre><code>
+transaction9.toObject();
+
+//example output
+{
+  change: 'mursDVxqNQmmwWHACpM9VHwVVSfTddGsEM',
+  version: 1,
+  inputs: [{
+    prevTxId: '16ef3f74507cec3b8471bad92ba8167bc0a88cf845a4b933de62dcc83723bc37',
+    outputIndex: 0,
+    sequenceNumber: 4294967295,
+    script: '71 0x3044022012098ef84ce13d1cfc2a72fec21a8032483e2129168b0f4517a121055ca3cba202207acd8dd8b881f5f8877813e78ef1653cd3c3642a25738ef9b3b7c6d82bc8661901 33 0x029c5bbfba66ed92c50b59f8f839a0088b6af37d2c98e4a9f3f08eb23e01998142',
+    output: [Object]
+  }],
+  outputs: [{
+    satoshis: 180000,
+    script: 'OP_HASH160 20 0xc79d4d3a1c6a7cda1506b216d8dcbe892094f5cc OP_EQUAL'
+  },{
+    satoshis: 20000,
+    script: 'OP_DUP OP_HASH160 20 0x9d55d743ca6bfdfa2da7eb75c662864a7f672a5c OP_EQUALVERIFY OP_CHECKSIG'
+  }],
+  nLockTime: 0
+}
+          </code></pre>
+          </section>
+          
+        </section>
+
+        <section>
+          <section>
+            <h2>Encrypted Data and Multisig</h2>
+            <pre><code>
+var arc4 = require('arc4');
+
+var alice1Key = PrivateKey.fromWIF('cNRh8zP8ScbFxm9ftsbddtum5N59ca83iut2ywjCEoDXaPFh2HAc');
+var alice1PublicKey = alice1Key.toPublicKey();
+
+var alice2Key = PrivateKey.fromWIF('cREbj8ed8xTMZrym1vugXo8jsS8Dsw6desUQVuhyjRP3MLsAJppF');
+var alice2PublicKey = alice2Key.toPublicKey();
+
+var message = 'a secret message that is encrypted in the bitcoin blockchain';
+
+var cipher = arc4('arc4', alice2Key.bn.toString('hex'));
+var encrypted = cipher.encodeString(message);
+var buffer = new Buffer(encrypted, 'hex');
+var part1 = buffer.slice(0, 32);
+var part2short = buffer.slice(32, buffer.length);
+var filler = new Buffer(32 - part2short.length);
+var part2 = Buffer.concat([part2short, filler]);
+
+var publicKey1 = PublicKey.fromString('02' + part1.toString('hex'));
+var publicKey2 = PublicKey.fromString('02' + part2.toString('hex'));
+            </code></pre>
+          </section>
+          <section>
+          <pre><code>
+
+var alice1Unspent = UnspentOutput({
+  "txid" : "1bc8a6e9f111ea4781401dc1cfe2d7441c051a9d721f46061e7dfd71bd63c4b0",
+  "vout" : 0,
+  "address" : "n2z1WJAhYq1TPDC6QieJKd6b3Ux12cy3Xd",
+  "scriptPubKey" : "76a914eb788d8b229b4924c48b5ea16968748ec6bad2f388ac",
+  "amount" : 0.00250000
+});
+
+var transaction = Transaction();
+
+transaction.from(alice1Unspent);
+transaction.fee(10000);
+
+transaction.addOutput(new Output({
+  script: Script.buildMultisigOut([alice2PublicKey, publicKey1, publicKey2], 1, true),
+  satoshis: 240000
+}));
+
+transaction.sign(alice1Key);
+
+var serialized = transaction.serialize();
+            
+          </code></pre>
+
+<small>testnet3 txid: <a href="https://test-insight.bitpay.com/tx/88982fc299016eec2b980b1b077589ffee61de10f9189f30e43722051c274ef1">88982fc299016eec2b980b1b077589ffee61de10f9189f30e43722051c274ef1</a></small>
+
+          </section>
+        </section>
+
+        <!-- Example of nested vertical slides -->
+        <section>
+          <h2>Additional Note</h2>
+          <p>Zero output payment to a public key hash is non-standard and <br/>won't be relayed in the network (considered "dust"), however with OP_RETURN <br/>the amount can be zero for both networks.</p>
+        </section>
+
+        <section>
+          <h2>Plugins and Modules</h2>
+
+          <ul>
+            <li class="fragment">
+              <h3><code>bitcore-channel</code></h3>
+              <p>Payment channel server and client.  High-volume transactions (> 1s).</p>
+            </li>
+            <li class="fragment">
+              <h3><code>bitcore-payment-protocol</code></h3>
+              <p>Payment protocol validators (that works in the browser!)</p>
+            </li>
+            <li class="fragment">
+              <h3><code>bitcore-explorers</code></h3>
+              <p>Get data from external services about the state of the blockchain (UTXOs, mainly)</p>
+            </li>
+          </ul>
+        </section>
+        
+        <section>
+          <h3><code>bitcore-channel</code></h3>
+          <section>
+            <pre><code>
+var Consumer = require('bitcore-channel').Consumer;
+var providerPublicKey = '027f10e67bea70f847b3ab92c18776c6a97a78f84def158afc31fd98513d42912e';
+var refundAddress = 'mzCXqcsLBerwyoRZzBFQELHaJ1ZtBSxxe6';
+var providerAddress = 'mrCHmWgn54hJNty2srFF4XLmkey5GnCv5m';
+
+var consumer = new Consumer({
+  network: 'testnet',
+  providerPublicKey: providerPublicKey,
+  providerAddress: providerAddress,
+  refundAddress: refundAddress
+});
+
+console.info('Send bitcoins to ' + consumer.fundingAddress.toString() ' to fund the channel');
+
+consumer.processFunding([{...}, {...}, {...}]);
+            </code></pre>
+          </section>
+          <section>
+            <pre><code>
+var Provider = require('bitcore-channel').Provider;
+var paymentAddress = 'mig4mc6q7PTQ2YZ9ax5YtR4gjARfoqJSZd';
+
+var provider = new Provider({
+  network: 'testnet',
+  paymentAddress: paymentAddress
+});
+console.info('Share this public key with potential consumers: ' + provider.getPublicKey());
+            </code></pre>
+          </section>
+          <section>
+            <pre><code>
+var messageToProvider = consumer.setupRefund();
+
+var messageToConsumer = provider.signRefund(receivedRefund);
+
+assert(consumer.validateRefund(messageFromProvider));
+
+sendToProvider(consumer.incrementPaymentBy(400 * SATOSHIS));
+sendToProvider(consumer.incrementPaymentBy(4 * BITS));
+            </code></pre>
+          </section>
+          <section>
+            <pre><code>
+provider.getPaymentTx();
+            </code></pre>
+          </section>
+        </section>
+        
+        <section>
+          <h3><code>bitcore-explorers</code></h3>
+          <pre><code>
+var explorers = require('bitcore-explorers');
+var insight = new explorers.Insight();
+
+insight.getUnspentUtxos('1Bitcoin...', function(err, utxos) {
+  if (err) {
+    // Handle errors...
+  } else {
+    // Maybe use the UTXOs to create a transaction
+  }
+});
+          </code></pre>
+        </section>
+        <section>
+          <h3><code>bitcore-payment-protocol</code></h3>
+          <pre><code>
+var PaymentProtocol = require('bitcore-payment-protocol');
+
+var body = PaymentProtocol.PaymentRequest.decode(rawbody);
+var request = new PaymentProtocol().makePaymentRequest(body);
+
+var version = pr.get('payment_details_version');
+var pki_type = pr.get('pki_type');
+var pki_data = pr.get('pki_data');
+var serializedDetails = pr.get('serialized_payment_details');
+var signature = pr.get('signature');
+
+// Verify the signature
+var verified = request.verify();
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Discussion & Questions</h2>
+        </section>
+
+      </div>
+
+    </div>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.js"></script>
+
+    <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+    
+        margin: 0,
+    
+        width: 1440,
+        height: 900,
+
+        transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: 'plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: 'plugin/zoom-js/zoom.js', async: true },
+          { src: 'plugin/notes/notes.js', async: true }
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
